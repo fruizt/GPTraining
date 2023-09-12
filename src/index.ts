@@ -8,7 +8,7 @@ import cors from 'cors';
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 8080;
 
 var mongoClient: MongoClient;
 var blobManager: AzureBlobManager;
