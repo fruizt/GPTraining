@@ -16,7 +16,6 @@ function syncBlob(req, res, client, blobManager) {
             const database = client.db("Documentation");
             const collection = database.collection("Documentation");
             const result = yield collection.find({}, { projection: { _id: 0 } }).toArray();
-            console.log(result);
             yield blobManager.uploadToAzure(result);
             res.status(200).json({ message: "Good request", result });
         }
