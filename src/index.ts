@@ -1,16 +1,17 @@
 import express, { Express, Request, Response } from 'express';
+import { AzureBlobManager } from './service/azure/ConnectToBlob';
 import { MongoClient } from 'mongodb';
-import { run } from './service/connectionToDb';
+import { syncBlob } from './service/request/ReadFromDB';
+import { addToDB } from './service/request/AddToDB';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { addToDB } from './service/request/addToDB';
-import { readFromDB } from './service/request/readFromDB';
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT;
 
 var mongoClient: MongoClient;
+var blobManager: AzureBlobManager;
 
 app.use(cors());
 app.use(express.json());
@@ -22,19 +23,25 @@ async function connectToDatabase() {
     await mongoClient.connect();
 }
 
+async function connectToBlob() {
+    const connectionString = process.env.AZURE_BLOB!;
+    blobManager = new AzureBlobManager(connectionString);
+}
+
 app.get('/', (req: Request, res: Response) => {
-    res.send('Express + TypeScript Server');
+    res.send('Server');
 });
 
 app.post('/add', async (req: Request, res: Response) => {
     addToDB(req, res, mongoClient);
 });
 
-app.get('/read', async (req: Request, res: Response) => {
-    readFromDB(req, res, mongoClient);
+app.post('/sync', async (req: Request, res: Response) => {
+    syncBlob(req, res, mongoClient, blobManager);
 });
 
 app.listen(port, async () => {
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+    console.log(`⚡️⚡️⚡️[server]: Server is running at http://localhost:${port}`);
     await connectToDatabase();
+    await connectToBlob();
 });

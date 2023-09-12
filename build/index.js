@@ -13,15 +13,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const ConnectToBlob_1 = require("./service/azure/ConnectToBlob");
 const mongodb_1 = require("mongodb");
+const ReadFromDB_1 = require("./service/request/ReadFromDB");
+const AddToDB_1 = require("./service/request/AddToDB");
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
-const addToDB_1 = require("./service/request/addToDB");
-const readFromDB_1 = require("./service/request/readFromDB");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT;
 var mongoClient;
+var blobManager;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
@@ -32,16 +34,23 @@ function connectToDatabase() {
         yield mongoClient.connect();
     });
 }
+function connectToBlob() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const connectionString = process.env.AZURE_BLOB;
+        blobManager = new ConnectToBlob_1.AzureBlobManager(connectionString);
+    });
+}
 app.get('/', (req, res) => {
-    res.send('Express + TypeScript Server');
+    res.send('Server');
 });
 app.post('/add', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, addToDB_1.addToDB)(req, res, mongoClient);
+    (0, AddToDB_1.addToDB)(req, res, mongoClient);
 }));
-app.get('/read', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    (0, readFromDB_1.readFromDB)(req, res, mongoClient);
+app.post('/sync', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    (0, ReadFromDB_1.syncBlob)(req, res, mongoClient, blobManager);
 }));
 app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+    console.log(`⚡️⚡️⚡️[server]: Server is running at http://localhost:${port}`);
     yield connectToDatabase();
+    yield connectToBlob();
 }));

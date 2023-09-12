@@ -9,13 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.readFromDB = void 0;
-function readFromDB(req, res, client) {
+exports.syncBlob = void 0;
+function syncBlob(req, res, client, blobManager) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const database = client.db("Documentation");
             const collection = database.collection("Documentation");
-            const result = yield collection.find({}).toArray();
+            const result = yield collection.find({}, { projection: { _id: 0 } }).toArray();
+            console.log(result);
+            yield blobManager.uploadToAzure(result);
             res.status(200).json({ message: "Good request", result });
         }
         catch (error) {
@@ -24,4 +26,4 @@ function readFromDB(req, res, client) {
         }
     });
 }
-exports.readFromDB = readFromDB;
+exports.syncBlob = syncBlob;
